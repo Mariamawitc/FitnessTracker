@@ -65,4 +65,4 @@ export default function NutritionPage() {
 
       <NutritionList ref={listRef} />
     </div>
-  );
+  );}
