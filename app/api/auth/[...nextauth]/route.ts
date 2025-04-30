@@ -13,6 +13,7 @@ interface User {
   image?: string | null;
 }
 
+// Define authOptions but do not export it
 const authOptions: NextAuthOptions = {
   adapter: MongoDBAdapter(clientPromise),
   providers: [
@@ -77,5 +78,6 @@ const authOptions: NextAuthOptions = {
   debug: process.env.NODE_ENV === 'development',
 };
 
+// Export only the handler for Next.js
 const handler = NextAuth(authOptions);
-export { handler as GET, handler as POST, authOptions };  // Add this line to export authOptions
+export { handler as GET, handler as POST };
