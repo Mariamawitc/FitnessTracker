@@ -3,10 +3,8 @@ import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import { Session } from "next-auth";
-import { JWT } from "next-auth/jwt";
 import clientPromise from "../../../../lib/db";
 import bcrypt from "bcryptjs";
-import { MongoClient } from "mongodb";
 
 interface User {
   id: string;
@@ -15,7 +13,7 @@ interface User {
   image?: string | null;
 }
 
-export const authOptions: NextAuthOptions = {
+const authOptions: NextAuthOptions = {
   adapter: MongoDBAdapter(clientPromise),
   providers: [
     GoogleProvider({
@@ -29,39 +27,34 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        try {
-          if (!credentials?.email || !credentials?.password) {
-            throw new Error('Email and password are required');
-          }
-
-          const client = await clientPromise;
-          const db = client.db();
-          const user = await db.collection("users").findOne({ email: credentials.email });
-
-          if (!user || !user.password) {
-            throw new Error('Invalid email or password');
-          }
-
-          const passwordMatch = await bcrypt.compare(credentials.password, user.password);
-
-          if (!passwordMatch) {
-            throw new Error('Invalid password');
-          }
-
-          return {
-            id: user._id.toString(),
-            email: user.email,
-            name: user.name,
-            image: user.image,
-          };
-        } catch (error: any) {
-          throw new Error(error.message);
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Email and password are required");
         }
+
+        const client = await clientPromise;
+        const db = client.db();
+        const user = await db.collection("users").findOne({ email: credentials.email });
+
+        if (!user || !user.password) {
+          throw new Error("Invalid email or password");
+        }
+
+        const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
+        if (!isPasswordValid) {
+          throw new Error("Invalid password");
+        }
+
+        return {
+          id: user._id.toString(),
+          email: user.email,
+          name: user.name,
+          image: user.image,
+        };
       }
     }),
   ],
   session: {
-    strategy: "jwt" as const,
+    strategy: "jwt",
   },
   pages: {
     signIn: '/auth/signin',
@@ -85,5 +78,4 @@ export const authOptions: NextAuthOptions = {
 };
 
 const handler = NextAuth(authOptions);
-
 export { handler as GET, handler as POST };
