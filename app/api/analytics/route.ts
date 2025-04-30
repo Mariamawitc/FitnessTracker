@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+
 import clientPromise from '@/lib/db';
 
 export async function GET(request: Request) {
   try {
-    // Use getServerSession without importing authOptions
     const session = await getServerSession();
 
     if (!session) {
